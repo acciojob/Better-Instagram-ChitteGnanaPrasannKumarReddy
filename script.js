@@ -1,38 +1,29 @@
-//your code here
-const dragStart = (event) => {
-  event.dataTransfer.setData("text/plain", event.target.id);
-};
+describe('Drag and Drop Tests', () => {
+  beforeEach(() => {
+    cy.visit('index.html');
+  });
 
-const dragOver = (event) => {
-  event.preventDefault();
-};
+  it('should have all draggable elements', () => {
+    for (let index = 1; index <= 6; index++) {
+      cy.get(`#drag${index}`).should('have.length', 1);
+    }
+  });
 
-const drop = (event) => {
-  event.preventDefault();
-  const draggedElementId = event.dataTransfer.getData("text");
-  const targetElementId = event.target.id;
-  
-  const draggedElement = document.getElementById(draggedElementId);
-  const targetElement = document.getElementById(targetElementId);
+  it('should drag and drop', () => {
+    const drag = (draggableId, droppableId) => {
+      const draggable = Cypress.$(`#${draggableId}`)[0];
+      const droppable = Cypress.$(`#${droppableId}`)[0];
+      const coords = droppable.getBoundingClientRect();
+      
+      draggable.dispatchEvent(new MouseEvent('mousedown'));
+      draggable.dispatchEvent(new MouseEvent('mousemove', { clientX: 10, clientY: 0 }));
+      draggable.dispatchEvent(new MouseEvent('mousemove', { clientX: coords.x + 10, clientY: coords.y + 10 }));
+      draggable.dispatchEvent(new MouseEvent('mouseup'));
+    };
 
-  if (draggedElement && targetElement) {
-    const draggedElementClone = draggedElement.cloneNode(true);
-    const targetElementClone = targetElement.cloneNode(true);
-
-    targetElement.replaceWith(draggedElementClone);
-    draggedElement.replaceWith(targetElementClone);
-
-    addDragAndDropListeners(draggedElementClone);
-    addDragAndDropListeners(targetElementClone);
-  }
-};
-
-const addDragAndDropListeners = (element) => {
-  element.addEventListener("dragstart", dragStart);
-  element.addEventListener("dragover", dragOver);
-  element.addEventListener("drop", drop);
-};
-
-document.querySelectorAll(".image").forEach((element) => {
-  addDragAndDropListeners(element);
+    drag('drag1', 'drag5');
+    cy.get('#drag5').within(() => {
+      cy.get('img').should('have.length', 1);
+    });
+  });
 });
